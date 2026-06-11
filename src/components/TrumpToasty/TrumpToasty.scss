@@ -1,0 +1,125 @@
+.trump-toasty {
+  position: fixed;
+  right: calc(var(--spacing) * 8);
+  bottom: 0;
+  z-index: var(--z-popup);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+  animation: toasty-jump-in 0.9s cubic-bezier(0.34, 1.45, 0.45, 1) both;
+
+  &--leaving {
+    animation: toasty-drop-out 0.45s cubic-bezier(0.5, 0, 0.75, 0.4) both;
+  }
+
+  &__bubble {
+    position: relative;
+    margin-right: calc(var(--spacing) * 6);
+    margin-bottom: calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+    border-radius: 12px;
+    background: var(--background-receipt);
+    box-shadow: 0 10px 28px rgb(0 0 0 / 45%);
+    color: var(--text-color-receipt);
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    letter-spacing: 0.08em;
+    transform-origin: bottom right;
+    animation: toasty-bubble-pop 0.3s cubic-bezier(0.18, 1.6, 0.4, 1) 0.45s both;
+
+    &::after {
+      content: '';
+      position: absolute;
+      right: calc(var(--spacing) * 6);
+      bottom: calc(var(--spacing) * -2);
+      border-top: calc(var(--spacing) * 2.5) solid var(--background-receipt);
+      border-right: calc(var(--spacing) * 2) solid transparent;
+      border-left: calc(var(--spacing) * 2) solid transparent;
+    }
+  }
+
+  &__figure {
+    width: 172px;
+    height: auto;
+    filter: drop-shadow(0 8px 22px rgb(0 0 0 / 50%));
+  }
+}
+
+@keyframes toasty-jump-in {
+  0% {
+    transform: translateY(105%);
+  }
+
+  45% {
+    transform: translateY(-7%);
+  }
+
+  62% {
+    transform: translateY(4%);
+  }
+
+  80% {
+    transform: translateY(-2%);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes toasty-drop-out {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(110%);
+  }
+}
+
+@keyframes toasty-bubble-pop {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trump-toasty {
+    animation: toasty-fade-in 0.3s ease both;
+
+    &--leaving {
+      animation: toasty-fade-out 0.3s ease both;
+    }
+
+    &__bubble {
+      animation: toasty-fade-in 0.3s ease 0.45s both;
+    }
+  }
+}
+
+@keyframes toasty-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes toasty-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

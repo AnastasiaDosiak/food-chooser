@@ -1,0 +1,101 @@
+.mode-step {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing) * 6);
+
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(240px, 320px));
+    gap: calc(var(--spacing) * 5);
+    justify-content: center;
+  }
+
+  &__party {
+    display: flex;
+    gap: calc(var(--spacing) * 5);
+    align-items: center;
+    justify-content: center;
+    padding: calc(var(--spacing) * 4) calc(var(--spacing) * 6);
+    border: 3px dashed var(--outline);
+    border-radius: 18px;
+    margin-inline: auto;
+    background: var(--background-secondary);
+    animation: party-reveal 0.3s ease both;
+  }
+
+  &__party-label {
+    color: var(--text-color-secondary);
+    font-family: var(--font-body);
+    font-style: italic;
+  }
+
+  &__stepper {
+    display: flex;
+    gap: calc(var(--spacing) * 3);
+    align-items: center;
+  }
+
+  &__stepper-button {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--outline);
+    border-radius: 50%;
+    background: var(--background-secondary);
+    box-shadow: 2px 2px 0 var(--pop-shadow-color);
+    color: var(--text-color-primary);
+    font-size: 1.3rem;
+    line-height: 1;
+
+    &:hover:not(:disabled) {
+      background: var(--accent-yellow);
+      transform: translate(-1px, -1px);
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+
+  &__party-size {
+    min-width: 48px;
+    color: var(--accent-orange);
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    text-align: center;
+    text-shadow: 2px 2px 0 var(--pop-shadow-color);
+  }
+
+  &__confirm {
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 6);
+    border: 3px solid var(--outline);
+    border-radius: 999px;
+    background: var(--accent-orange);
+    box-shadow: 4px 4px 0 var(--outline);
+    color: var(--background-secondary);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease;
+
+    &:hover {
+      box-shadow: 6px 6px 0 var(--outline);
+      transform: translate(-2px, -2px);
+    }
+  }
+}
+
+@keyframes party-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

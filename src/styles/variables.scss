@@ -1,0 +1,51 @@
+:root {
+  /* System-shipped fonts only — no CDN, the demo must survive venue wifi. */
+  --font-display: 'Arial Black', 'Segoe UI Black', sans-serif;
+  --font-body: georgia, 'Times New Roman', serif;
+  --font-ui: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: consolas, 'Courier New', monospace;
+
+  --spacing: 4px;
+
+  /* Retro game-show pop: cream stage, espresso ink, loud accents. */
+  --background-primary: #fdf3dc;
+  --background-secondary: #fffaf0;
+  --background-tertiary: #f3e4c2;
+
+  --text-color-primary: #38241c;
+  --text-color-secondary: #8a6f5e;
+
+  --outline: #38241c;
+  --border-primary: #e2d3b3;
+  --pop-shadow-color: rgb(56 36 28 / 20%);
+
+  --accent-orange: #ff6b35;
+  --accent-yellow: #ffc53d;
+  --accent-pink: #ff4f9a;
+  --accent-teal: #0fb5a3;
+  --accent-purple: #845ec2;
+  --accent-danger: #e84855;
+  --accent-danger-deep: #b2293a;
+
+  /* Heat ramp for the ledger-burn: pale-hot core → yellow → orange → deep red. */
+  --fire-core: #fff2ad;
+  --fire-hot: #ffbb2e;
+  --fire-mid: #ff6a1a;
+  --fire-deep: #d52f1e;
+  --fire-char: #2a1a12;
+
+  --bulb: #ffc53d;
+  --bulb-dim: #b08a3e;
+  --ray-color: #f6dfae;
+  --wheel-label: #38241c;
+  --label-halo: #fff8e8;
+
+  --background-receipt: #fffdf4;
+  --text-color-receipt: #3a3027;
+  --text-color-receipt-dim: #9a8c78;
+
+  --overlay-background: rgb(56 36 28 / 52%);
+
+  --z-overlay: 100;
+  --z-popup: 110;
+}
