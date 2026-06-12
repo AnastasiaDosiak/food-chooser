@@ -1,0 +1,124 @@
+.my-places {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-popup);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--spacing) * 4);
+  background: var(--overlay-background);
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 4);
+    width: min(440px, 100%);
+    max-height: 86vh;
+    padding: calc(var(--spacing) * 6);
+    border: 4px solid var(--outline);
+    border-radius: 18px;
+    background: var(--background-secondary);
+    box-shadow: 8px 8px 0 var(--pop-shadow-color);
+    overflow-y: auto;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+  }
+
+  &__close {
+    border: none;
+    background: none;
+    color: var(--text-color-secondary);
+    font-size: 1.2rem;
+  }
+
+  &__field {
+    display: flex;
+    gap: calc(var(--spacing) * 3);
+    align-items: center;
+    font-family: var(--font-ui);
+
+    select {
+      flex: 1;
+      padding: calc(var(--spacing) * 2);
+      border: 3px solid var(--outline);
+      border-radius: 10px;
+      background: var(--background-secondary);
+      font-family: var(--font-ui);
+    }
+  }
+
+  &__empty {
+    color: var(--text-color-secondary);
+    font-family: var(--font-body);
+    font-style: italic;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 2);
+  }
+
+  &__item {
+    display: flex;
+    gap: calc(var(--spacing) * 2);
+    align-items: center;
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    border: 2px solid var(--border-primary);
+    border-radius: 10px;
+  }
+
+  &__item-name {
+    flex: 1;
+    font-family: var(--font-ui);
+    font-weight: 600;
+  }
+
+  &__item-delete {
+    border: none;
+    background: none;
+    color: var(--accent-danger);
+    font-size: 1rem;
+  }
+
+  &__add {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 2);
+
+    .my-places__name {
+      flex: 1 1 100%;
+      padding: calc(var(--spacing) * 3);
+      border: 3px solid var(--outline);
+      border-radius: 10px;
+      font-family: var(--font-ui);
+    }
+
+    select {
+      flex: 1;
+      padding: calc(var(--spacing) * 2);
+      border: 3px solid var(--outline);
+      border-radius: 10px;
+      background: var(--background-secondary);
+      font-family: var(--font-ui);
+    }
+  }
+
+  &__submit {
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 5);
+    border: 3px solid var(--outline);
+    border-radius: 999px;
+    background: var(--accent-teal);
+    color: var(--background-secondary);
+    font-family: var(--font-display);
+  }
+}

@@ -1,47 +1,59 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
-import { getFoodTypeById } from '@common/foodTypes';
 import type {
   ChoiceType,
-  FoodType,
+  CuisineGroup,
   PartyMode,
   SpinRecord,
+  Venue,
   WheelKind,
   WheelSegmentOption,
 } from '@shared-types/index';
 import {
-  buildChainedRestaurantSegments,
-  buildFoodSegments,
-  buildVotedRestaurantSegments,
+  buildChainedVenueSegments,
+  buildCuisineSegments,
+  buildVenueSegments,
 } from '@utils/buildSegments';
 
-export type WizardStage = 'mode' | 'choice' | 'selection' | 'wheel';
+export type WizardStage = 'location' | 'mode' | 'choice' | 'selection' | 'wheel';
 
 export interface WheelResult {
   kind: 'intermediate' | 'final';
   isUnanimous: boolean;
+  /** The wheel had exactly one option, so it was decided without a spin. */
+  isLoneOption?: boolean;
   winnerLabel: string;
   winnerEmoji?: string;
   viaLabel?: string;
 }
 
 interface UseWizardParams {
+  cuisineGroups: CuisineGroup[];
   onFinalVerdict: (record: SpinRecord) => void;
 }
 
-/** The journey: mode → choice → selection → wheel (→ chained wheel) → verdict. */
-export const useWizard = ({ onFinalVerdict }: UseWizardParams) => {
-  const [stage, setStage] = useState<WizardStage>('mode');
+/** The journey: location → mode → choice → selection → wheel (→ chained) → verdict. */
+export const useWizard = ({ cuisineGroups, onFinalVerdict }: UseWizardParams) => {
+  const [stage, setStage] = useState<WizardStage>('location');
   const [partyMode, setPartyMode] = useState<PartyMode>('solo');
   const [partySize, setPartySize] = useState(1);
   const [choiceType, setChoiceType] = useState<ChoiceType>('food');
   const [wheelKind, setWheelKind] = useState<WheelKind>('food');
   const [segments, setSegments] = useState<WheelSegmentOption[]>([]);
-  const [chainedFromFood, setChainedFromFood] = useState<FoodType | null>(null);
-  const [pendingFood, setPendingFood] = useState<FoodType | null>(null);
+  const [chainedFromGroup, setChainedFromGroup] = useState<CuisineGroup | null>(null);
+  const [pendingGroup, setPendingGroup] = useState<CuisineGroup | null>(null);
   const [hasFlipEntrance, setHasFlipEntrance] = useState(false);
   const [wheelMountKey, setWheelMountKey] = useState(0);
   const [result, setResult] = useState<WheelResult | null>(null);
+
+  const allVenues = useMemo<Venue[]>(
+    () => cuisineGroups.flatMap((group) => group.venues),
+    [cuisineGroups],
+  );
+  const groupById = useMemo(
+    () => new Map(cuisineGroups.map((group) => [group.id, group])),
+    [cuisineGroups],
+  );
 
   const showWheel = useCallback(
     (nextSegments: WheelSegmentOption[], kind: WheelKind, withFlip: boolean) => {
@@ -56,9 +68,14 @@ export const useWizard = ({ onFinalVerdict }: UseWizardParams) => {
   );
 
   const finalize = useCallback(
-    (winner: WheelSegmentOption, isUnanimous: boolean, viaFood: FoodType | null) => {
-      const viaLabel = viaFood ? `${viaFood.emoji} ${viaFood.label}` : undefined;
-      setResult({ kind: 'final', isUnanimous, winnerLabel: winner.label, viaLabel });
+    (
+      winner: WheelSegmentOption,
+      isUnanimous: boolean,
+      viaGroup: CuisineGroup | null,
+      isLoneOption = false,
+    ) => {
+      const viaLabel = viaGroup ? `${viaGroup.emoji} ${viaGroup.label}` : undefined;
+      setResult({ kind: 'final', isUnanimous, isLoneOption, winnerLabel: winner.label, viaLabel });
       onFinalVerdict({
         id: crypto.randomUUID(),
         winnerLabel: winner.label,
@@ -81,93 +98,101 @@ export const useWizard = ({ onFinalVerdict }: UseWizardParams) => {
     setStage('choice');
   }, []);
 
+  const confirmLocation = useCallback(() => setStage('mode'), []);
+
   const selectChoiceType = useCallback(
     (type: ChoiceType) => {
       setChoiceType(type);
-      setChainedFromFood(null);
-      setPendingFood(null);
+      setChainedFromGroup(null);
+      setPendingGroup(null);
       if (type === 'food' && partyMode === 'solo') {
-        showWheel(buildFoodSegments(), 'food', false);
+        showWheel(buildCuisineSegments(cuisineGroups), 'food', false);
       } else {
         setStage('selection');
       }
     },
-    [partyMode, showWheel],
+    [partyMode, showWheel, cuisineGroups],
   );
 
   const finishSelection = useCallback(
     (votesByOptionId: Record<string, number>) => {
       if (choiceType === 'food') {
-        const foodSegments = buildFoodSegments(votesByOptionId);
+        const foodSegments = buildCuisineSegments(cuisineGroups, votesByOptionId);
         showWheel(foodSegments, 'food', false);
         if (foodSegments.length === 1) {
-          const unanimousFood = getFoodTypeById(foodSegments[0].id);
-          if (unanimousFood) {
-            setPendingFood(unanimousFood);
+          const unanimousGroup = groupById.get(foodSegments[0].id);
+          if (unanimousGroup) {
+            setPendingGroup(unanimousGroup);
             setResult({
               kind: 'intermediate',
               isUnanimous: true,
-              winnerLabel: unanimousFood.label,
-              winnerEmoji: unanimousFood.emoji,
+              winnerLabel: unanimousGroup.label,
+              winnerEmoji: unanimousGroup.emoji,
             });
           }
         }
         return;
       }
 
-      const restaurantSegments = buildVotedRestaurantSegments(votesByOptionId);
+      const restaurantSegments = buildVenueSegments(allVenues, votesByOptionId);
       showWheel(restaurantSegments, 'restaurant', false);
       if (restaurantSegments.length === 1) {
         finalize(restaurantSegments[0], true, null);
       }
     },
-    [choiceType, showWheel, finalize],
+    [choiceType, cuisineGroups, allVenues, groupById, showWheel, finalize],
   );
 
   const handleWheelSettle = useCallback(
     (winner: WheelSegmentOption) => {
       if (wheelKind === 'food') {
-        const winningFood = getFoodTypeById(winner.id);
-        if (winningFood) {
-          setPendingFood(winningFood);
+        const winningGroup = groupById.get(winner.id);
+        if (winningGroup) {
+          setPendingGroup(winningGroup);
           setResult({
             kind: 'intermediate',
             isUnanimous: false,
-            winnerLabel: winningFood.label,
-            winnerEmoji: winningFood.emoji,
+            winnerLabel: winningGroup.label,
+            winnerEmoji: winningGroup.emoji,
           });
         }
         return;
       }
-      finalize(winner, false, chainedFromFood);
+      finalize(winner, false, chainedFromGroup);
     },
-    [wheelKind, finalize, chainedFromFood],
+    [wheelKind, groupById, finalize, chainedFromGroup],
   );
 
-  /** Intermediate result confirmed — flip the wheel into the winning food's restaurants. */
   const advanceFromResult = useCallback(() => {
-    if (!pendingFood) {
+    if (!pendingGroup) {
       return;
     }
-    setChainedFromFood(pendingFood);
-    showWheel(buildChainedRestaurantSegments(pendingFood.id), 'restaurant', true);
-    setPendingFood(null);
-  }, [pendingFood, showWheel]);
+    const venueSegments = buildChainedVenueSegments(pendingGroup);
+    setChainedFromGroup(pendingGroup);
+    setPendingGroup(null);
+    // A cuisine with a single venue: a spin can't change the answer, so don't fake one.
+    if (venueSegments.length === 1) {
+      finalize(venueSegments[0], false, pendingGroup, true);
+      return;
+    }
+    showWheel(venueSegments, 'restaurant', true);
+  }, [pendingGroup, showWheel, finalize]);
 
   const dismissResult = useCallback(() => setResult(null), []);
 
+  const goToLocation = useCallback(() => setStage('location'), []);
   const goToMode = useCallback(() => setStage('mode'), []);
   const goToChoice = useCallback(() => setStage('choice'), []);
 
   const startOver = useCallback(() => {
-    setStage('mode');
+    setStage('location');
     setPartyMode('solo');
     setPartySize(1);
     setChoiceType('food');
     setWheelKind('food');
     setSegments([]);
-    setChainedFromFood(null);
-    setPendingFood(null);
+    setChainedFromGroup(null);
+    setPendingGroup(null);
     setHasFlipEntrance(false);
     setResult(null);
   }, []);
@@ -179,10 +204,11 @@ export const useWizard = ({ onFinalVerdict }: UseWizardParams) => {
     choiceType,
     wheelKind,
     segments,
-    chainedFromFood,
+    chainedFromGroup,
     hasFlipEntrance,
     wheelMountKey,
     result,
+    confirmLocation,
     selectSolo,
     selectCompany,
     selectChoiceType,
@@ -190,6 +216,7 @@ export const useWizard = ({ onFinalVerdict }: UseWizardParams) => {
     handleWheelSettle,
     advanceFromResult,
     dismissResult,
+    goToLocation,
     goToMode,
     goToChoice,
     startOver,

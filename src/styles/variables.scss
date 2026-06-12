@@ -48,4 +48,9 @@
 
   --z-overlay: 100;
   --z-popup: 110;
+
+  /* Responsive breakpoints (doc only — media queries use the same literal px). */
+  --breakpoint-phone: 600px;
+  --breakpoint-drawer: 768px;
+  --breakpoint-desktop: 1024px;
 }

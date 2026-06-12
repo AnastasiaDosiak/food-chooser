@@ -99,3 +99,15 @@
     transform: translateY(0);
   }
 }
+
+@media (max-width: 600px) {
+  .mode-step__cards {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-step__party {
+    flex-wrap: wrap;
+    gap: calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 4);
+  }
+}

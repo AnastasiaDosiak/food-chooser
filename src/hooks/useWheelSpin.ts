@@ -176,8 +176,7 @@ export const useWheelSpin = ({
       const step = (timestamp: number) => {
         startedAt = startedAt ?? timestamp;
         const progress = Math.min((timestamp - startedAt) / duration, 1);
-        const rotation =
-          fromRotation + (targetRotation - fromRotation) * easeOutDrama(progress);
+        const rotation = fromRotation + (targetRotation - fromRotation) * easeOutDrama(progress);
         applyRotation(rotation);
         tickOnBoundaryCross(rotation);
 

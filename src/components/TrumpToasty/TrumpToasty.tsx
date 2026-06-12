@@ -72,8 +72,22 @@ export const TrumpToasty = () => {
           />
           <circle cx="36" cy="134" r="12" fill={PALETTE.skin} />
           <circle cx="164" cy="134" r="12" fill={PALETTE.skin} />
-          <circle cx="41" cy="142" r="4.5" stroke={PALETTE.skinShade} strokeWidth="2.5" fill="none" />
-          <circle cx="159" cy="142" r="4.5" stroke={PALETTE.skinShade} strokeWidth="2.5" fill="none" />
+          <circle
+            cx="41"
+            cy="142"
+            r="4.5"
+            stroke={PALETTE.skinShade}
+            strokeWidth="2.5"
+            fill="none"
+          />
+          <circle
+            cx="159"
+            cy="142"
+            r="4.5"
+            stroke={PALETTE.skinShade}
+            strokeWidth="2.5"
+            fill="none"
+          />
         </g>
         <rect x="88" y="146" width="24" height="20" fill={PALETTE.skin} />
         <path

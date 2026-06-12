@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 
+import { pluralUk } from '@i18n/translate';
+import { useTranslation } from '@i18n/useTranslation';
 import { castVote, countTotalVotes, withdrawVote } from '@utils/voteTally';
 
 import './SelectionBoard.scss';
@@ -35,6 +37,7 @@ export const SelectionBoard = ({
   finishLabel,
   onFinish,
 }: SelectionBoardProps) => {
+  const { t, language } = useTranslation();
   const [votesByOptionId, setVotesByOptionId] = useState<Record<string, number>>({});
 
   const handleIncrement = (optionId: string) => {
@@ -61,15 +64,29 @@ export const SelectionBoard = ({
 
   const canFinish = votedOptionCount >= minSelections;
 
+  const pluralNoun = (base: string, count: number) => {
+    const one = t(`selection.noun.${base}.one`);
+    const few = t(`selection.noun.${base}.few`);
+    const many = t(`selection.noun.${base}.many`);
+    return language === 'uk' ? pluralUk(count, one, few, many) : count === 1 ? one : few;
+  };
+
   const statusText =
     mode === 'select'
-      ? `${votedOptionCount} contender${votedOptionCount === 1 ? '' : 's'} picked`
-      : `${totalVotes} vote${totalVotes === 1 ? '' : 's'} cast · max ${partySize} per option`;
+      ? t('selection.status.picked', {
+          count: votedOptionCount,
+          noun: pluralNoun('contender', votedOptionCount),
+        })
+      : t('selection.status.cast', {
+          count: totalVotes,
+          noun: pluralNoun('vote', totalVotes),
+          max: partySize,
+        });
 
   const hintText =
     mode === 'select'
-      ? `pick at least ${minSelections} — destiny needs options`
-      : 'shout, argue, then click — democracy at its finest';
+      ? t('selection.hint.select', { min: minSelections })
+      : t('selection.hint.tally');
 
   return (
     <div className="selection-board">
@@ -97,7 +114,9 @@ export const SelectionBoard = ({
                       disabled={isOptionFull}
                       onClick={() => handleIncrement(item.id)}
                     >
-                      {item.emoji && <span className="selection-board__chip-emoji">{item.emoji}</span>}
+                      {item.emoji && (
+                        <span className="selection-board__chip-emoji">{item.emoji}</span>
+                      )}
                       <span className="selection-board__chip-label">{item.label}</span>
                       {mode === 'tally' && isActive && (
                         <span className="selection-board__chip-count">{voteCount}</span>
@@ -110,7 +129,7 @@ export const SelectionBoard = ({
                       <button
                         type="button"
                         className="selection-board__chip-minus"
-                        aria-label={`Remove a vote from ${item.label}`}
+                        aria-label={t('selection.removeVote', { label: item.label })}
                         onClick={() => handleDecrement(item.id)}
                       >
                         −

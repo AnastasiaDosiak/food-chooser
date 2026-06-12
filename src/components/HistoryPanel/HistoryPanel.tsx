@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { useTranslation } from '@i18n/useTranslation';
 import type { SpinRecord } from '@shared-types/index';
 import { useCasinoAudio } from '@hooks/useCasinoAudio';
 
@@ -19,6 +20,7 @@ interface HistoryPanelProps {
 }
 
 export const HistoryPanel = ({ records, onClear }: HistoryPanelProps) => {
+  const { t } = useTranslation();
   const [isBurning, setIsBurning] = useState(false);
   const burnTimerRef = useRef(0);
   const fwooshTimerRef = useRef(0);
@@ -49,16 +51,18 @@ export const HistoryPanel = ({ records, onClear }: HistoryPanelProps) => {
     <aside className="history-panel">
       <div className={`history-panel__paper${isBurning ? ' history-panel__paper--burning' : ''}`}>
         <header className="history-panel__header">
-          <span className="history-panel__brand">★ game show royale de lviv ★</span>
-          <h3 className="history-panel__title">Ledger of Fate</h3>
-          <span className="history-panel__subtitle">verdicts to date: {records.length}</span>
+          <span className="history-panel__brand">{t('history.brand')}</span>
+          <h3 className="history-panel__title">{t('history.title')}</h3>
+          <span className="history-panel__subtitle">
+            {t('history.verdicts', { count: records.length })}
+          </span>
         </header>
 
         {records.length === 0 ? (
           <p className="history-panel__empty">
-            no verdicts yet.
+            {t('history.empty.line1')}
             <br />
-            the wheel is patient.
+            {t('history.empty.line2')}
           </p>
         ) : (
           <ul className="history-panel__list">
@@ -69,6 +73,9 @@ export const HistoryPanel = ({ records, onClear }: HistoryPanelProps) => {
                   {record.viaLabel ? `${record.viaLabel} → ` : ''}
                   {record.winnerLabel}
                 </span>
+                {record.locationLabel && (
+                  <span className="history-panel__place">{record.locationLabel}</span>
+                )}
               </li>
             ))}
           </ul>
@@ -81,7 +88,7 @@ export const HistoryPanel = ({ records, onClear }: HistoryPanelProps) => {
             disabled={isBurning}
             onClick={handleBurnClick}
           >
-            {isBurning ? 'burning…' : 'burn the ledger 🔥'}
+            {isBurning ? t('history.burning') : t('history.burn')}
           </button>
         )}
       </div>
@@ -91,7 +98,13 @@ export const HistoryPanel = ({ records, onClear }: HistoryPanelProps) => {
           <svg className="history-panel__fire-defs" width="0" height="0">
             <filter id="ledger-fire" x="-30%" y="-30%" width="160%" height="160%">
               {/* Animated noise warps the flat heat-gradient into living, licking flames. */}
-              <feTurbulence type="fractalNoise" baseFrequency="0.016 0.04" numOctaves="3" seed="7" result="noise">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.016 0.04"
+                numOctaves="3"
+                seed="7"
+                result="noise"
+              >
                 <animate
                   attributeName="baseFrequency"
                   dur="2.4s"
@@ -99,7 +112,13 @@ export const HistoryPanel = ({ records, onClear }: HistoryPanelProps) => {
                   repeatCount="indefinite"
                 />
               </feTurbulence>
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="38" xChannelSelector="R" yChannelSelector="G" />
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="noise"
+                scale="38"
+                xChannelSelector="R"
+                yChannelSelector="G"
+              />
             </filter>
           </svg>
           <div className="history-panel__glow" />

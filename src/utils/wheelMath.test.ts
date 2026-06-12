@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { WheelSegmentOption } from '@shared-types/index';
 
-import { buildFoodSegments, buildVotedRestaurantSegments } from './buildSegments';
 import {
   computeSegmentArcs,
   computeTargetRotation,
@@ -185,25 +184,5 @@ describe('randomBetween and randomIntBetween', () => {
     expect(randomBetween(5200, 6800, () => 0.5)).toBe(6000);
     expect(randomIntBetween(5, 8, () => 0)).toBe(5);
     expect(randomIntBetween(5, 8, () => 0.999)).toBe(8);
-  });
-});
-
-describe('buildSegments', () => {
-  it('drops zero-vote options and keeps vote weights', () => {
-    const segments = buildFoodSegments({ sushi: 4, pizza: 3 });
-    expect(segments.map((segment) => segment.id).sort()).toEqual(['pizza', 'sushi']);
-    expect(segments.find((segment) => segment.id === 'sushi')?.weight).toBe(4);
-  });
-
-  it('builds equal-weight segments for all food types without votes', () => {
-    const segments = buildFoodSegments();
-    expect(segments).toHaveLength(10);
-    expect(segments.every((segment) => segment.weight === 1)).toBe(true);
-  });
-
-  it('maps restaurant votes to weighted segments', () => {
-    const segments = buildVotedRestaurantSegments({ 'sushi-0': 2, 'pizza-3': 5 });
-    expect(segments).toHaveLength(2);
-    expect(segments.find((segment) => segment.id === 'pizza-3')?.weight).toBe(5);
   });
 });

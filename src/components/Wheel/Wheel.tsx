@@ -4,6 +4,7 @@ import { MIN_OPTIONS_TO_SPIN, STORAGE_KEYS } from '@common/constants';
 import type { WheelSegmentOption } from '@shared-types/index';
 import { useCasinoAudio } from '@hooks/useCasinoAudio';
 import { useWheelSpin } from '@hooks/useWheelSpin';
+import { useTranslation } from '@i18n/useTranslation';
 import { landingBurst } from '@utils/confetti';
 import { computeSegmentArcs } from '@utils/wheelMath';
 
@@ -18,12 +19,7 @@ const BULB_RADIUS = 206;
 const MAX_LABEL_CHARS = 16;
 const TAUNT_VISIBLE_MS = 2300;
 
-const TAUNTS = [
-  'Weak wrist. The house is unimpressed.',
-  'That was a caress, not a flick.',
-  'Petting the wheel will not feed you.',
-  'My grandmother flicks harder.',
-] as const;
+const TAUNT_COUNT = 4;
 
 const readHintSeen = () => {
   try {
@@ -72,6 +68,7 @@ interface WheelProps {
 }
 
 export const Wheel = ({ segments, hasFlipEntrance = false, onSettle }: WheelProps) => {
+  const { t } = useTranslation();
   const {
     primeAudio,
     playTick,
@@ -94,7 +91,7 @@ export const Wheel = ({ segments, hasFlipEntrance = false, onSettle }: WheelProp
 
   const handleWeakFlick = useCallback(() => {
     playTrombone();
-    setTauntIndex(Math.floor(Math.random() * TAUNTS.length));
+    setTauntIndex(Math.floor(Math.random() * TAUNT_COUNT));
     window.clearTimeout(tauntTimerRef.current);
     tauntTimerRef.current = window.setTimeout(() => setTauntIndex(null), TAUNT_VISIBLE_MS);
   }, [playTrombone]);
@@ -158,7 +155,7 @@ export const Wheel = ({ segments, hasFlipEntrance = false, onSettle }: WheelProp
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         role="img"
-        aria-label="Decision wheel — grab and flick to spin, or press the SPIN button"
+        aria-label={t('wheel.aria')}
       >
         <svg viewBox={`0 0 ${SIZE} ${SIZE}`}>
           {arcs.map((arc, index) => {
@@ -168,9 +165,19 @@ export const Wheel = ({ segments, hasFlipEntrance = false, onSettle }: WheelProp
               <g key={segment.id}>
                 {/* A 360° arc path degenerates — a unanimous wheel is just a circle. */}
                 {arcs.length === 1 ? (
-                  <circle className="wheel__slice" cx={CENTER} cy={CENTER} r={WHEEL_RADIUS} fill={segment.color} />
+                  <circle
+                    className="wheel__slice"
+                    cx={CENTER}
+                    cy={CENTER}
+                    r={WHEEL_RADIUS}
+                    fill={segment.color}
+                  />
                 ) : (
-                  <path className="wheel__slice" d={buildSlicePath(arc.startAngle, arc.endAngle)} fill={segment.color} />
+                  <path
+                    className="wheel__slice"
+                    d={buildSlicePath(arc.startAngle, arc.endAngle)}
+                    fill={segment.color}
+                  />
                 )}
                 <g transform={`rotate(${bisector} ${CENTER} ${CENTER})`}>
                   <text
@@ -199,15 +206,13 @@ export const Wheel = ({ segments, hasFlipEntrance = false, onSettle }: WheelProp
         onClick={handleSpinButtonClick}
         disabled={phase !== 'idle' || segments.length < MIN_OPTIONS_TO_SPIN}
       >
-        SPIN
+        {t('wheel.spin')}
       </button>
 
       <div className={`wheel__pointer${phase === 'spinning' ? ' wheel__pointer--ticking' : ''}`} />
 
-      {!isHintSeen && phase === 'idle' && (
-        <div className="wheel__hint">👋 grab &amp; flick — or smash SPIN</div>
-      )}
-      {tauntIndex !== null && <div className="wheel__taunt">{TAUNTS[tauntIndex]}</div>}
+      {!isHintSeen && phase === 'idle' && <div className="wheel__hint">{t('wheel.hint')}</div>}
+      {tauntIndex !== null && <div className="wheel__taunt">{t(`wheel.taunt.${tauntIndex}`)}</div>}
     </div>
   );
 };

@@ -24,7 +24,9 @@
       "@common/*": ["src/common/*"],
       "@shared-types/*": ["src/types/*"],
       "@styles/*": ["src/styles/*"],
-      "@assets/*": ["src/assets/*"]
+      "@assets/*": ["src/assets/*"],
+      "@services/*": ["src/services/*"],
+      "@i18n/*": ["src/i18n/*"]
     }
   },
   "include": ["src"]

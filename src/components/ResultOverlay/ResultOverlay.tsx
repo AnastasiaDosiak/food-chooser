@@ -1,5 +1,7 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+import { useTranslation } from '@i18n/useTranslation';
+import type { OrderLinks } from '@shared-types/index';
 import { startCannonade } from '@utils/confetti';
 
 import './ResultOverlay.scss';
@@ -10,9 +12,11 @@ interface ResultOverlayProps {
   /** `intermediate` = a food type won and the wheel is about to flip; `final` = dinner is decided. */
   kind: 'intermediate' | 'final';
   isUnanimous?: boolean;
+  isLoneOption?: boolean;
   winnerLabel: string;
   winnerEmoji?: string;
   viaLabel?: string;
+  orderLinks?: OrderLinks;
   onContinue?: () => void;
   onRespin?: () => void;
   onStartOver?: () => void;
@@ -21,13 +25,16 @@ interface ResultOverlayProps {
 export const ResultOverlay = ({
   kind,
   isUnanimous = false,
+  isLoneOption = false,
   winnerLabel,
   winnerEmoji,
   viaLabel,
+  orderLinks,
   onContinue,
   onRespin,
   onStartOver,
 }: ResultOverlayProps) => {
+  const { t } = useTranslation();
   useEffect(() => {
     if (kind !== 'final') {
       return undefined;
@@ -43,14 +50,24 @@ export const ResultOverlay = ({
     return () => clearTimeout(autoContinueTimer);
   }, [kind, onContinue]);
 
+  const [isCopied, setIsCopied] = useState(false);
+  const handleCopyName = useCallback(() => {
+    void navigator.clipboard?.writeText(winnerLabel).then(
+      () => setIsCopied(true),
+      () => setIsCopied(false),
+    );
+  }, [winnerLabel]);
+
   const kickerText =
     kind === 'final'
-      ? isUnanimous
-        ? 'unanimous — you didn’t even need me'
-        : 'the wheel has spoken'
+      ? isLoneOption
+        ? t('result.kicker.final.lone')
+        : isUnanimous
+          ? t('result.kicker.final.unanimous')
+          : t('result.kicker.final.spoken')
       : isUnanimous
-        ? 'unanimous appetite detected'
-        : 'the wheel demands';
+        ? t('result.kicker.intermediate.unanimous')
+        : t('result.kicker.intermediate.demands');
 
   return (
     <div className="result-overlay" role="dialog" aria-live="assertive">
@@ -64,18 +81,56 @@ export const ResultOverlay = ({
 
         {kind === 'intermediate' ? (
           <>
-            <p className="result-overlay__note">flipping the wheel to {winnerLabel.toLowerCase()} territory…</p>
+            <p className="result-overlay__note">
+              {t('result.note.flipping', { target: winnerLabel.toLowerCase() })}
+            </p>
             <button type="button" className="result-overlay__action" onClick={onContinue}>
-              flip it now →
+              {t('result.flipNow')}
             </button>
           </>
         ) : (
           <>
-            <p className="result-overlay__note">no take-backs. the house is hungry too.</p>
+            <p className="result-overlay__note">
+              {isLoneOption ? t('result.note.lone') : t('result.note.final')}
+            </p>
+            {orderLinks && (
+              <div className="result-overlay__order">
+                <span className="result-overlay__order-label">
+                  {orderLinks.cityLabel
+                    ? t('result.order.labelCity', { city: orderLinks.cityLabel })
+                    : t('result.order.label')}
+                </span>
+                <div className="result-overlay__order-links">
+                  <a
+                    className="result-overlay__order-link"
+                    href={orderLinks.glovoUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    Glovo ↗
+                  </a>
+                  <a
+                    className="result-overlay__order-link"
+                    href={orderLinks.boltUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    Bolt Food ↗
+                  </a>
+                  <button
+                    type="button"
+                    className="result-overlay__order-copy"
+                    onClick={handleCopyName}
+                  >
+                    {isCopied ? t('result.order.copied') : t('result.order.copy')}
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="result-overlay__actions">
               {onRespin && (
                 <button type="button" className="result-overlay__action" onClick={onRespin}>
-                  tempt fate again 🎲
+                  {t('result.respin')}
                 </button>
               )}
               <button
@@ -83,7 +138,7 @@ export const ResultOverlay = ({
                 className="result-overlay__action result-overlay__action--ghost"
                 onClick={onStartOver}
               >
-                start over
+                {t('result.startOver')}
               </button>
             </div>
           </>

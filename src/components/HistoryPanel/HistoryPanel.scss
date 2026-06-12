@@ -219,6 +219,12 @@
   }
 }
 
+.history-panel__place {
+  display: block;
+  font-size: 0.65rem;
+  opacity: 0.55;
+}
+
 @keyframes paper-burn {
   from {
     clip-path: inset(0 0 0 0);

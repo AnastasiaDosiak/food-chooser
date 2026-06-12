@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { PARTY_SIZE_DEFAULT, PARTY_SIZE_MAX, PARTY_SIZE_MIN } from '@common/constants';
 import { ChoiceCard } from '@components/ChoiceCard/ChoiceCard';
+import { useTranslation } from '@i18n/useTranslation';
 
 import './ModeStep.scss';
 
@@ -11,6 +12,7 @@ interface ModeStepProps {
 }
 
 export const ModeStep = ({ onSelectSolo, onSelectCompany }: ModeStepProps) => {
+  const { t } = useTranslation();
   const [isCompanyPicked, setIsCompanyPicked] = useState(false);
   const [partySize, setPartySize] = useState(PARTY_SIZE_DEFAULT);
 
@@ -24,14 +26,14 @@ export const ModeStep = ({ onSelectSolo, onSelectCompany }: ModeStepProps) => {
       <div className="mode-step__cards">
         <ChoiceCard
           emoji="🐺"
-          title="Lone wolf"
-          description="table for one. the wheel respects that."
+          title={t('mode.solo.title')}
+          description={t('mode.solo.desc')}
           onClick={onSelectSolo}
         />
         <ChoiceCard
           emoji="👥"
-          title="The pack"
-          description="many mouths, one verdict. votes will be counted."
+          title={t('mode.company.title')}
+          description={t('mode.company.desc')}
           isSelected={isCompanyPicked}
           onClick={() => setIsCompanyPicked(true)}
         />
@@ -39,14 +41,14 @@ export const ModeStep = ({ onSelectSolo, onSelectCompany }: ModeStepProps) => {
 
       {isCompanyPicked && (
         <div className="mode-step__party">
-          <span className="mode-step__party-label">how many hungry souls?</span>
+          <span className="mode-step__party-label">{t('mode.party.label')}</span>
           <div className="mode-step__stepper">
             <button
               type="button"
               className="mode-step__stepper-button"
               onClick={() => adjustPartySize(-1)}
               disabled={partySize <= PARTY_SIZE_MIN}
-              aria-label="Fewer people"
+              aria-label={t('mode.party.fewer')}
             >
               −
             </button>
@@ -56,13 +58,17 @@ export const ModeStep = ({ onSelectSolo, onSelectCompany }: ModeStepProps) => {
               className="mode-step__stepper-button"
               onClick={() => adjustPartySize(1)}
               disabled={partySize >= PARTY_SIZE_MAX}
-              aria-label="More people"
+              aria-label={t('mode.party.more')}
             >
               +
             </button>
           </div>
-          <button type="button" className="mode-step__confirm" onClick={() => onSelectCompany(partySize)}>
-            assemble the jury →
+          <button
+            type="button"
+            className="mode-step__confirm"
+            onClick={() => onSelectCompany(partySize)}
+          >
+            {t('mode.confirm')}
           </button>
         </div>
       )}

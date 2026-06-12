@@ -77,3 +77,13 @@
     transform: translateY(0);
   }
 }
+
+@media (max-width: 600px) {
+  .step-shell {
+    gap: calc(var(--spacing) * 5);
+  }
+
+  .step-shell__subtitle {
+    font-size: 1rem;
+  }
+}

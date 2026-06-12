@@ -8,7 +8,9 @@
     flex-direction: column;
     gap: calc(var(--spacing) * 6);
     max-height: 52vh;
-    padding-right: calc(var(--spacing) * 2);
+    /* Room for the −9px corner remove-badges so the top row/right column aren't clipped by overflow. */
+    padding-top: calc(var(--spacing) * 3);
+    padding-right: calc(var(--spacing) * 3);
     overflow-y: auto;
     scrollbar-color: var(--outline) transparent;
   }
@@ -193,5 +195,26 @@
 
   to {
     transform: scale(1);
+  }
+}
+
+@media (max-width: 600px) {
+  .selection-board__sections {
+    max-height: 60vh;
+  }
+
+  .selection-board__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .selection-board__footer {
+    flex-direction: column;
+    gap: calc(var(--spacing) * 3);
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .selection-board__finish {
+    width: 100%;
   }
 }

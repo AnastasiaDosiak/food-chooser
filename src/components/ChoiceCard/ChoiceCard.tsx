@@ -8,7 +8,13 @@ interface ChoiceCardProps {
   onClick: () => void;
 }
 
-export const ChoiceCard = ({ emoji, title, description, isSelected = false, onClick }: ChoiceCardProps) => (
+export const ChoiceCard = ({
+  emoji,
+  title,
+  description,
+  isSelected = false,
+  onClick,
+}: ChoiceCardProps) => (
   <button
     type="button"
     className={`choice-card${isSelected ? ' choice-card--selected' : ''}`}

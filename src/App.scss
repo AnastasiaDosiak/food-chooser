@@ -6,7 +6,14 @@
   padding: calc(var(--spacing) * 7) calc(var(--spacing) * 9);
 
   &__header {
+    position: relative;
     text-align: center;
+  }
+
+  &__lang {
+    position: absolute;
+    top: 0;
+    right: 0;
   }
 
   &__header-stars {
@@ -37,6 +44,19 @@
     font-style: italic;
   }
 
+  &__location {
+    display: inline-block;
+    padding: calc(var(--spacing) * 1) calc(var(--spacing) * 3);
+    margin-top: calc(var(--spacing) * 3);
+    border: 2px solid var(--accent-teal);
+    border-radius: 999px;
+    background: var(--background-secondary);
+    color: var(--accent-teal);
+    font-family: var(--font-ui);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
   &__layout {
     display: flex;
     flex: 1;
@@ -61,5 +81,129 @@
     grid-template-columns: repeat(2, minmax(240px, 320px));
     gap: calc(var(--spacing) * 5);
     justify-content: center;
+  }
+
+  &__venue-status {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 3);
+    align-items: center;
+    color: var(--text-color-secondary);
+    font-family: var(--font-body);
+    font-style: italic;
+    text-align: center;
+  }
+
+  &__retry {
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 5);
+    border: 3px solid var(--outline);
+    border-radius: 999px;
+    background: var(--accent-yellow);
+    font-family: var(--font-display);
+    cursor: pointer;
+  }
+
+  &__attribution {
+    padding-top: calc(var(--spacing) * 4);
+    color: var(--text-color-secondary);
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    text-align: center;
+    opacity: 0.7;
+  }
+}
+
+@media (max-width: 768px) {
+  .app {
+    gap: calc(var(--spacing) * 6);
+    padding: calc(var(--spacing) * 5) calc(var(--spacing) * 4);
+  }
+
+  /* Stage takes the full width; history leaves the flow (drawer below). */
+  .app__layout {
+    flex-direction: column;
+    gap: calc(var(--spacing) * 6);
+  }
+
+  .app__stage {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .app__history {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .app {
+    padding: calc(var(--spacing) * 4) calc(var(--spacing) * 3);
+  }
+
+  .app__choice-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.app__history-toggle {
+  display: none;
+}
+
+.app__history-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .app__history-toggle {
+    position: fixed;
+    right: calc(var(--spacing) * 4);
+    bottom: calc(var(--spacing) * 4);
+    z-index: var(--z-popup);
+    display: block;
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 5);
+    border: 3px solid var(--outline);
+    border-radius: 999px;
+    background: var(--accent-pink);
+    box-shadow: 4px 4px 0 var(--pop-shadow-color);
+    color: var(--background-secondary);
+    font-family: var(--font-display);
+    font-size: 1rem;
+  }
+
+  .app__history-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-overlay);
+    display: block;
+    border: none;
+    background: var(--overlay-background);
+  }
+
+  /* Bottom sheet: off-screen until --open. */
+  .app__history {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--z-popup);
+    display: flex;
+    justify-content: center;
+    max-height: 80vh;
+    padding: calc(var(--spacing) * 4);
+    overflow-y: auto;
+    background: var(--background-primary);
+    border-top: 4px solid var(--outline);
+    border-radius: 18px 18px 0 0;
+    transform: translateY(110%);
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .app__history--open {
+    transform: translateY(0);
+  }
+
+  /* The receipt is fixed-width; let it shrink to the sheet. */
+  .history-panel {
+    width: min(360px, 100%);
   }
 }
