@@ -49,3 +49,28 @@
   --z-overlay: 100;
   --z-popup: 110;
 }
+
+[data-theme='dark'] {
+  --background-primary: #0d1224;
+  --background-secondary: #141a30;
+  --background-tertiary: #1c2340;
+
+  --text-color-primary: #e8eaf6;
+  --text-color-secondary: #8fa3c8;
+
+  --outline: #e8eaf6;
+  --border-primary: #2a3558;
+  --pop-shadow-color: rgb(0 0 0 / 50%);
+
+  --bulb: #ffc53d;
+  --bulb-dim: #4a5880;
+  --ray-color: #1e2a4a;
+  --wheel-label: #e8eaf6;
+  --label-halo: #141a30;
+
+  --background-receipt: #111828;
+  --text-color-receipt: #d0d8f0;
+  --text-color-receipt-dim: #5a6a90;
+
+  --overlay-background: rgb(0 5 20 / 75%);
+}

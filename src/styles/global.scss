@@ -11,6 +11,9 @@ body {
     radial-gradient(1200px 800px at 50% -14%, rgb(255 197 61 / 22%), transparent 60%),
     var(--background-primary);
   background-attachment: fixed;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
   color: var(--text-color-primary);
   font-family: var(--font-ui);
 }

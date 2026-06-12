@@ -12,12 +12,14 @@ import { StepShell } from '@components/StepShell/StepShell';
 import { TrumpToasty } from '@components/TrumpToasty/TrumpToasty';
 import { Wheel } from '@components/Wheel/Wheel';
 import { useLocalStorageState } from '@hooks/useLocalStorageState';
+import { useTheme } from '@hooks/useTheme';
 import { useWizard } from '@hooks/useWizard';
 import type { SpinRecord } from '@shared-types/index';
 
 import './App.scss';
 
 const App = () => {
+  const { theme, toggle: toggleTheme } = useTheme();
   const [history, setHistory] = useLocalStorageState<SpinRecord[]>(STORAGE_KEYS.history, []);
 
   const appendVerdict = useCallback(
@@ -160,6 +162,14 @@ const App = () => {
 
   return (
     <div className="app">
+      <button
+        className="app__theme-toggle"
+        onClick={toggleTheme}
+        aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+        title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+      >
+        {theme === 'light' ? '🍳' : '🌙'}
+      </button>
       <header className="app__header">
         <span className="app__header-stars">★ ★ ★</span>
         <h1 className="app__title">Wheel of Dinner</h1>
