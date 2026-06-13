@@ -9,8 +9,8 @@ import type { ChosenLocation, Venue } from '@shared-types/index';
 import { normalizeVenues, type OverpassElement } from '@utils/normalizeVenues';
 
 const QUERY_TIMEOUT_SECONDS = 90;
-/** Generous client timeout — the proxy already retries Overpass and its mirror server-side. */
-const PROXY_TIMEOUT_MS = 30000;
+/** Generous client timeout — the proxy retries Overpass and its slow mirror server-side. */
+const PROXY_TIMEOUT_MS = 45000;
 const VENUES_PROXY_PATH = '/api/venues';
 
 /** Single lean query — one combined amenity set, tags+center only (payload discipline). */

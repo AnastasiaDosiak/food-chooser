@@ -9,7 +9,7 @@ const OVERPASS_DEV_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.kumi.systems/api/interpreter',
 ];
-const DEV_ENDPOINT_TIMEOUT_MS = 12000;
+const DEV_ENDPOINT_TIMEOUT_MS = 26000;
 
 /** Mirrors api/venues.js for `npm run dev` — Vite doesn't run the Vercel serverless function. */
 const venuesDevProxy = (): Plugin => ({
