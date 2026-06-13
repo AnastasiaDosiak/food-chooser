@@ -43,8 +43,10 @@ export const VENUE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 /** Primary then mirror — trying both is our "retry once" under Overpass load. */
 export const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
-  'https://overpass.private.coffee/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
 ] as const;
+/** Per-endpoint client timeout — a dead/slow mirror must fail over, never hang the UI. */
+export const OVERPASS_REQUEST_TIMEOUT_MS = 18000;
 export const PHOTON_ENDPOINT = 'https://photon.komoot.io/api/';
 
 /** Retro game-show slice palette — loud, distinct, espresso-outline friendly. */

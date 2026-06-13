@@ -4,6 +4,7 @@ import {
   MIN_VENUES_BEFORE_EXPAND,
   NEAR_RADIUS_METERS,
   OVERPASS_ENDPOINTS,
+  OVERPASS_REQUEST_TIMEOUT_MS,
   OVERPASS_RESULT_CAP,
 } from '@common/constants';
 import type { ChosenLocation, Venue } from '@shared-types/index';
@@ -26,11 +27,15 @@ export const buildOverpassQuery = (
 const requestElements = async (query: string): Promise<OverpassElement[]> => {
   let lastError: unknown = new Error('Overpass unreachable');
   for (const endpoint of OVERPASS_ENDPOINTS) {
+    // A dead or stalled mirror must time out and fail over — never hang the UI.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), OVERPASS_REQUEST_TIMEOUT_MS);
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `data=${encodeURIComponent(query)}`,
+        signal: controller.signal,
       });
       if (!response.ok) {
         throw new Error(`Overpass ${response.status}`);
@@ -39,6 +44,8 @@ const requestElements = async (query: string): Promise<OverpassElement[]> => {
       return payload.elements ?? [];
     } catch (error) {
       lastError = error;
+    } finally {
+      clearTimeout(timeout);
     }
   }
   throw lastError instanceof Error ? lastError : new Error('Overpass unreachable');
