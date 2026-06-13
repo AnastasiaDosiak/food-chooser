@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { STORAGE_KEYS, VENUE_CACHE_TTL_MS } from '@common/constants';
+import { buildFallbackVenues } from '@common/fallbackVenues';
 import type { ChosenLocation, Venue } from '@shared-types/index';
 import { fetchVenues } from '@services/overpassClient';
 
@@ -67,16 +68,22 @@ export const useVenues = (location: ChosenLocation | null) => {
         if (requestId !== requestIdRef.current) {
           return;
         }
-        writeCache(key, fetched);
-        setVenues(fetched);
+        if (fetched.length > 0) {
+          writeCache(key, fetched);
+          setVenues(fetched);
+        } else {
+          // Live lookup found nothing nearby — keep the wheel playable with curated picks.
+          setVenues(buildFallbackVenues(target));
+        }
         setStatus('ready');
       })
-      .catch((caught: unknown) => {
+      .catch(() => {
         if (requestId !== requestIdRef.current) {
           return;
         }
-        setError(caught instanceof Error ? caught.message : 'fetch failed');
-        setStatus('error');
+        // Overpass is frequently rate-limited/down; never strand the user — use curated venues.
+        setVenues(buildFallbackVenues(target));
+        setStatus('ready');
       });
   }, []);
 
