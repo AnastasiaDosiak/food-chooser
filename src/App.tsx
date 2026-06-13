@@ -23,7 +23,7 @@ import { useVenues } from '@hooks/useVenues';
 import { useWizard } from '@hooks/useWizard';
 import { useTranslation } from '@i18n/useTranslation';
 import { deriveCuisineGroups } from '@utils/deriveCuisineGroups';
-import { buildMyPlacesGroup, cityKeyFor } from '@utils/myPlaces';
+import { cityKeyFor, mergeUserPlacesIntoGroups } from '@utils/myPlaces';
 import { buildOrderLinks } from '@utils/orderLinks';
 import type { ChosenLocation, SpinRecord } from '@shared-types/index';
 
@@ -73,10 +73,8 @@ const App = () => {
     retry: retryVenues,
   } = useVenues(location);
   const cuisineGroups = useMemo(() => {
-    const osmGroups = deriveCuisineGroups(venues);
-    const myGroup = buildMyPlacesGroup(myPlacesForCity);
-    const allGroups = myGroup ? [myGroup, ...osmGroups] : osmGroups;
-    return allGroups.map((group) => {
+    const merged = mergeUserPlacesIntoGroups(deriveCuisineGroups(venues), myPlacesForCity);
+    return merged.map((group) => {
       const cuisineKey = `cuisine.${group.id}`;
       const translated = t(cuisineKey);
       return { ...group, label: translated === cuisineKey ? group.label : translated };
@@ -106,6 +104,7 @@ const App = () => {
             id: group.id,
             label: group.label,
             emoji: group.emoji,
+            isUserAdded: group.venues.some((venue) => venue.isUserAdded),
           })),
         },
       ];
@@ -117,6 +116,7 @@ const App = () => {
       items: group.venues.slice(0, SELECTION_VENUES_PER_FAMILY).map((venue) => ({
         id: venue.id,
         label: venue.name,
+        isUserAdded: venue.isUserAdded,
       })),
     }));
   }, [wizard.choiceType, cuisineGroups]);
@@ -225,6 +225,11 @@ const App = () => {
               minSelections={isCompany ? 1 : MIN_SOLO_RESTAURANT_PICKS}
               finishLabel={isCompany ? t('selection.finish.votes') : t('selection.finish.spin')}
               onFinish={wizard.finishSelection}
+              onAddItem={
+                wizard.choiceType === 'restaurant' && cityKey
+                  ? (familyId, name) => addPlace({ name, familyId, cityKey })
+                  : undefined
+              }
             />
           </StepShell>
         );

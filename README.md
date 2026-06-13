@@ -35,8 +35,6 @@ A single-screen wizard: **location → mode → choice → selection → wheel �
 - 🚚 **Order it** — the verdict card links straight to Glovo and Bolt Food for your city.
 - 🌍 **English & Ukrainian** — switchable and remembered.
 
-A full, feature-by-feature guide lives in **[docs/features/](docs/features/README.md)**.
-
 ## Quickstart
 
 ```sh

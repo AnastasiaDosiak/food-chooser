@@ -20,6 +20,7 @@ const MAX_LABEL_CHARS = 16;
 const TAUNT_VISIBLE_MS = 2300;
 
 const TAUNT_COUNT = 4;
+const SUSPENSE_COUNT = 6;
 
 const readHintSeen = () => {
   try {
@@ -81,12 +82,14 @@ export const Wheel = ({ segments, hasFlipEntrance = false, onSettle }: WheelProp
 
   const [isHintSeen, setIsHintSeen] = useState(readHintSeen);
   const [tauntIndex, setTauntIndex] = useState<number | null>(null);
+  const [commentaryIndex, setCommentaryIndex] = useState<number | null>(null);
   const tauntTimerRef = useRef(0);
 
   const handleFlick = useCallback(() => {
     startSpinLoop();
     setIsHintSeen(true);
     persistHintSeen();
+    setCommentaryIndex(null);
   }, [startSpinLoop]);
 
   const handleWeakFlick = useCallback(() => {
@@ -96,11 +99,16 @@ export const Wheel = ({ segments, hasFlipEntrance = false, onSettle }: WheelProp
     tauntTimerRef.current = window.setTimeout(() => setTauntIndex(null), TAUNT_VISIBLE_MS);
   }, [playTrombone]);
 
+  const handleSuspenseBeat = useCallback(() => {
+    setCommentaryIndex(Math.floor(Math.random() * SUSPENSE_COUNT));
+  }, []);
+
   const handleSettle = useCallback(
     (winner: WheelSegmentOption) => {
       stopSpinLoop();
       playFanfare();
       landingBurst();
+      setCommentaryIndex(null);
       onSettle(winner);
     },
     [stopSpinLoop, playFanfare, onSettle],
@@ -116,6 +124,7 @@ export const Wheel = ({ segments, hasFlipEntrance = false, onSettle }: WheelProp
       onFlick: handleFlick,
       onSpeedChange: setWheelSpeed,
       onWeakFlick: handleWeakFlick,
+      onSuspenseBeat: handleSuspenseBeat,
       onSettle: handleSettle,
     });
 
@@ -213,6 +222,11 @@ export const Wheel = ({ segments, hasFlipEntrance = false, onSettle }: WheelProp
 
       {!isHintSeen && phase === 'idle' && <div className="wheel__hint">{t('wheel.hint')}</div>}
       {tauntIndex !== null && <div className="wheel__taunt">{t(`wheel.taunt.${tauntIndex}`)}</div>}
+      {phase === 'spinning' && commentaryIndex !== null && (
+        <div className="wheel__commentary" role="status">
+          {t(`wheel.suspense.${commentaryIndex}`)}
+        </div>
+      )}
     </div>
   );
 };

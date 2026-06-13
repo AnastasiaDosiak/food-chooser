@@ -1,15 +1,31 @@
 import { describe, expect, it } from 'vitest';
 
-import type { UserVenue } from '@shared-types/index';
+import type { CuisineGroup, UserVenue, Venue } from '@shared-types/index';
 
-import { buildMyPlacesGroup, cityKeyFor } from './myPlaces';
+import { cityKeyFor, mergeUserPlacesIntoGroups } from './myPlaces';
 
-const place = (id: string, name: string, cityKey: string): UserVenue => ({
+const place = (id: string, name: string, familyId = 'asian', cityKey = 'lviv'): UserVenue => ({
   id,
   name,
-  familyId: 'asian',
+  familyId,
   cityKey,
   addedAt: '2026-06-12T00:00:00Z',
+});
+
+const osmVenue = (id: string, distanceMeters: number): Venue => ({
+  id,
+  name: id,
+  latitude: 0,
+  longitude: 0,
+  cuisines: ['x'],
+  distanceMeters,
+});
+
+const group = (id: string, label: string, emoji: string, venues: Venue[]): CuisineGroup => ({
+  id,
+  label,
+  emoji,
+  venues,
 });
 
 describe('cityKeyFor', () => {
@@ -22,16 +38,34 @@ describe('cityKeyFor', () => {
   });
 });
 
-describe('buildMyPlacesGroup', () => {
-  it('returns null when the city has no places', () => {
-    expect(buildMyPlacesGroup([])).toBeNull();
+describe('mergeUserPlacesIntoGroups', () => {
+  it('returns the groups unchanged when there are no user places', () => {
+    const groups = [group('asian', 'Asian', '🥡', [osmVenue('a', 10)])];
+    expect(mergeUserPlacesIntoGroups(groups, [])).toEqual(groups);
   });
-  it('builds a ⭐ group whose venues carry the place names', () => {
-    const group = buildMyPlacesGroup([
-      place('p1', 'NOA', 'lviv'),
-      place('p2', 'Tiki Thai', 'lviv'),
+
+  it('merges a user place into its chosen family, pinned first and flagged', () => {
+    const groups = [group('asian', 'Asian', '🥡', [osmVenue('a', 10)])];
+    const merged = mergeUserPlacesIntoGroups(groups, [place('p1', 'NOA', 'asian')]);
+    const asian = merged.find((candidate) => candidate.id === 'asian')!;
+    expect(asian.venues.map((venue) => venue.name)).toEqual(['NOA', 'a']);
+    expect(asian.venues[0].isUserAdded).toBe(true);
+    expect(asian.venues[1].isUserAdded).toBeUndefined();
+  });
+
+  it('creates the family group when the chosen family has no nearby venues', () => {
+    const merged = mergeUserPlacesIntoGroups([], [place('p1', 'Some Sushi', 'seafood')]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toMatchObject({ id: 'seafood', emoji: '🦞' });
+    expect(merged[0].venues[0]).toMatchObject({ name: 'Some Sushi', isUserAdded: true });
+  });
+
+  it('re-ranks so the larger family comes first', () => {
+    const groups = [group('asian', 'Asian', '🥡', [osmVenue('a', 1)])];
+    const merged = mergeUserPlacesIntoGroups(groups, [
+      place('p1', 'B1', 'grill'),
+      place('p2', 'B2', 'grill'),
     ]);
-    expect(group).toMatchObject({ id: 'my-places', label: 'My Places', emoji: '⭐' });
-    expect(group?.venues.map((v) => v.name)).toEqual(['NOA', 'Tiki Thai']);
+    expect(merged[0].id).toBe('grill');
   });
 });

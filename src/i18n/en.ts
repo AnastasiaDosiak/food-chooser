@@ -70,6 +70,8 @@ export const en: Dictionary = {
   'selection.hint.select': 'pick at least {min} — destiny needs options',
   'selection.hint.tally': 'shout, argue, then click — democracy at its finest',
   'selection.removeVote': 'Remove a vote from {label}',
+  'selection.add.placeholder': 'add a missing spot…',
+  'selection.add.submit': 'Add this place',
 
   'wheel.spin': 'SPIN',
   'wheel.hint': '👋 grab & flick — or smash SPIN',
@@ -78,6 +80,12 @@ export const en: Dictionary = {
   'wheel.taunt.1': 'That was a caress, not a flick.',
   'wheel.taunt.2': 'Petting the wheel will not feed you.',
   'wheel.taunt.3': 'My grandmother flicks harder.',
+  'wheel.suspense.0': 'ooh, so close…',
+  'wheel.suspense.1': "don't get attached.",
+  'wheel.suspense.2': 'the wheel is toying with you.',
+  'wheel.suspense.3': '…is it? …no.',
+  'wheel.suspense.4': 'not so fast, friend.',
+  'wheel.suspense.5': 'the house is enjoying this.',
 
   'result.kicker.final.unanimous': 'unanimous — you didn’t even need me',
   'result.kicker.final.spoken': 'the wheel has spoken',
@@ -135,7 +143,6 @@ export const en: Dictionary = {
   'cuisine.healthy': 'Healthy',
   'cuisine.seafood': 'Seafood',
   'cuisine.other': 'Surprise Me',
-  'cuisine.my-places': 'My Places',
 
   'lang.en': 'EN',
   'lang.uk': 'UA',

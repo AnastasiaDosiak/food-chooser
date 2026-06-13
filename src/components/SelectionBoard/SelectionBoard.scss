@@ -42,6 +42,12 @@
       background: var(--accent-yellow);
       box-shadow: 3px 3px 0 var(--pop-shadow-color);
     }
+
+    /* A user's own My-Place — dashed orange marks it as yours, active or not. */
+    &--mine .selection-board__chip-main {
+      border-style: dashed;
+      border-color: var(--accent-orange);
+    }
   }
 
   &__chip-main {
@@ -104,6 +110,47 @@
     color: var(--accent-teal);
     font-size: 1.2rem;
     font-weight: 700;
+  }
+
+  &__chip-mine {
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  &__add {
+    display: flex;
+    gap: calc(var(--spacing) * 2);
+    margin-top: calc(var(--spacing) * 3);
+  }
+
+  &__add-input {
+    flex: 1;
+    min-height: 44px;
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3);
+    border: 2px dashed var(--accent-orange);
+    border-radius: 12px;
+    background: var(--background-secondary);
+    color: var(--text-color-primary);
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+
+    &::placeholder {
+      color: var(--text-color-secondary);
+    }
+  }
+
+  &__add-button {
+    flex-shrink: 0;
+    width: 44px;
+    border: 2px solid var(--outline);
+    border-radius: 12px;
+    background: var(--accent-teal);
+    color: var(--background-secondary);
+    font-size: 1.1rem;
+
+    &:hover {
+      transform: translateY(-1px);
+    }
   }
 
   &__chip-minus {

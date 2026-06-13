@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { pickTrumpPhrase, useToastySound } from '@hooks/useToastySound';
+import { pickToastyLine, useToastySound } from '@hooks/useToastySound';
 
 import './TrumpToasty.scss';
 
@@ -27,7 +27,7 @@ type ToastyPhase = 'hidden' | 'jumping' | 'leaving' | 'done';
 /** MK "Toasty!"-style corner pop: the house congratulates you on the choice it made for you. */
 export const TrumpToasty = () => {
   const [phase, setPhase] = useState<ToastyPhase>('hidden');
-  const [line] = useState(pickTrumpPhrase);
+  const [line] = useState(pickToastyLine);
   const { playToasty } = useToastySound();
 
   useEffect(() => {

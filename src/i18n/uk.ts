@@ -69,6 +69,8 @@ export const uk: Dictionary = {
   'selection.hint.select': 'обери щонайменше {min} — долі потрібні варіанти',
   'selection.hint.tally': 'кричіть, сперечайтесь, тоді клікайте — демократія в дії',
   'selection.removeVote': 'Прибрати голос за {label}',
+  'selection.add.placeholder': 'додай заклад, якого бракує…',
+  'selection.add.submit': 'Додати заклад',
 
   'wheel.spin': 'КРУТИ',
   'wheel.hint': '👋 хапай і крути — або тисни КРУТИ',
@@ -77,6 +79,12 @@ export const uk: Dictionary = {
   'wheel.taunt.1': 'Це була ласка, а не кидок.',
   'wheel.taunt.2': 'Гладити колесо — не нагодує.',
   'wheel.taunt.3': 'Моя бабуся крутить сильніше.',
+  'wheel.suspense.0': 'оо, так близько…',
+  'wheel.suspense.1': 'не прив’язуйся.',
+  'wheel.suspense.2': 'колесо грається з тобою.',
+  'wheel.suspense.3': '…невже? …ні.',
+  'wheel.suspense.4': 'не так швидко, друже.',
+  'wheel.suspense.5': 'казино від цього кайфує.',
 
   'result.kicker.final.unanimous': 'одностайно — я навіть не був потрібен',
   'result.kicker.final.spoken': 'колесо вирішило',
@@ -134,7 +142,6 @@ export const uk: Dictionary = {
   'cuisine.healthy': 'Здорова їжа',
   'cuisine.seafood': 'Морепродукти',
   'cuisine.other': 'Сюрприз',
-  'cuisine.my-places': 'Мої місця',
 
   'lang.en': 'EN',
   'lang.uk': 'UA',

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { WheelSegmentOption } from '@shared-types/index';
 
 import {
+  buildSuspenseTimeline,
   computeSegmentArcs,
   computeTargetRotation,
   findSegmentIndexAtPointer,
@@ -184,5 +185,60 @@ describe('randomBetween and randomIntBetween', () => {
     expect(randomBetween(5200, 6800, () => 0.5)).toBe(6000);
     expect(randomIntBetween(5, 8, () => 0)).toBe(5);
     expect(randomIntBetween(5, 8, () => 0.999)).toBe(8);
+  });
+});
+
+describe('buildSuspenseTimeline', () => {
+  const params = (finalTarget: number) => ({
+    fromRotation: 0,
+    finalTarget,
+    launchSpeedDegPerMs: 1,
+    random: () => 0.5,
+  });
+
+  it('always rests exactly on the rigged target across several bursts', () => {
+    const finalTarget = 6 * 360 + 123;
+    const phases = buildSuspenseTimeline(params(finalTarget));
+    expect(phases[phases.length - 1].toRotation).toBe(finalTarget);
+    expect(phases.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('launches velocity-matched, then speeds back up on every later burst', () => {
+    const finalTarget = 6 * 360 + 123;
+    const [first, ...rest] = buildSuspenseTimeline(params(finalTarget));
+    expect(first.ease).toBe('drama');
+    expect(first.durationMs).toBe(flickDuration(first.toRotation, 1)); // launch-matched (R2.4)
+    expect(rest.length).toBeGreaterThanOrEqual(1);
+    expect(rest.every((phase) => phase.ease === 'surge')).toBe(true); // the re-acceleration
+  });
+
+  it('does not park one tile short — the first pause stays far from the winner', () => {
+    const finalTarget = 6 * 360 + 123;
+    const [first] = buildSuspenseTimeline(params(finalTarget));
+    expect(finalTarget - first.toRotation).toBeGreaterThan(200); // far more than an adjacent tile
+    expect(first.holdMsAfter).toBeGreaterThan(0);
+    expect(first.suspense).toBe(true);
+  });
+
+  it('advances monotonically toward the target, never reversing (CW and CCW)', () => {
+    const cw = buildSuspenseTimeline(params(6 * 360 + 50));
+    [0, ...cw.map((phase) => phase.toRotation)].reduce((previous, current) => {
+      expect(current).toBeGreaterThan(previous);
+      return current;
+    });
+
+    const ccw = buildSuspenseTimeline(params(-(6 * 360 + 50)));
+    [0, ...ccw.map((phase) => phase.toRotation)].reduce((previous, current) => {
+      expect(current).toBeLessThan(previous);
+      return current;
+    });
+  });
+
+  it('teases on every pause and goes quiet for the final landing', () => {
+    const phases = buildSuspenseTimeline(params(6 * 360));
+    const last = phases[phases.length - 1];
+    expect(last.suspense).toBe(false);
+    expect(last.holdMsAfter).toBe(0);
+    expect(phases.slice(0, -1).every((phase) => phase.suspense)).toBe(true);
   });
 });

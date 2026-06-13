@@ -51,6 +51,8 @@ export interface Venue {
   cuisines: string[];
   website?: string;
   distanceMeters: number;
+  /** True for a user's My-Place addition (vs a real OSM venue) — highlighted in selection lists. */
+  isUserAdded?: boolean;
 }
 
 export interface CuisineGroup {

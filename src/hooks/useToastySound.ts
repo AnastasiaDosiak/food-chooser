@@ -28,24 +28,45 @@ export const TRUMP_PHRASES = [
   'big flavor, very big, the biggest',
 ] as const;
 
-/** One random Trump line per pop. */
-export const pickTrumpPhrase = (): string =>
-  TRUMP_PHRASES[Math.floor(Math.random() * TRUMP_PHRASES.length)];
+interface VoiceClip {
+  caption: string;
+  url: string;
+}
 
-const SPOKEN_PITCH = 0.7;
-const SPOKEN_RATE = 0.95;
-// Deepest, most authoritative local male voice first — the closest match to the target on Windows.
-const VOICE_PREFERENCE = [/david/i, /mark/i, /guy/i] as const;
-const CLIP_VOLUME = 0.9;
+// Recorded clips live in src/assets/voice/. Each filename stem maps to the bubble
+// caption here, so the spoken line and the on-screen text always match. Add a clip
+// (and its stem→caption entry) to grow the roster; drop them all to fall back to synth.
+const VOICE_LINE_BY_STEM: Record<string, string> = {
+  'believe-me-its-the-best': "believe me, it's the best",
+  'tremendous-just-tremendous': 'tremendous, just tremendous',
+};
 
-// Drop the real clip at src/assets/trump-voice.(mp3|ogg|wav|m4a) — it auto-plays instead of the synth voice.
-const VOICE_CLIP_URL = Object.values(
-  import.meta.glob<string>('../assets/trump-voice.*', {
+const stemOf = (path: string): string => (path.split('/').pop() ?? path).replace(/\.[^.]+$/, '');
+
+const VOICE_CLIPS: VoiceClip[] = Object.entries(
+  import.meta.glob<string>('../assets/voice/*.{m4a,mp3,ogg,wav}', {
     eager: true,
     query: '?url',
     import: 'default',
   }),
-)[0];
+).map(([path, url]) => {
+  const stem = stemOf(path);
+  return { caption: VOICE_LINE_BY_STEM[stem] ?? stem.replace(/-/g, ' '), url };
+});
+
+const hasVoiceClips = VOICE_CLIPS.length > 0;
+
+/** A random pop line. With recorded clips present, only their captions are used so audio matches text. */
+export const pickToastyLine = (): string => {
+  const lines = hasVoiceClips ? VOICE_CLIPS.map((clip) => clip.caption) : TRUMP_PHRASES;
+  return lines[Math.floor(Math.random() * lines.length)];
+};
+
+const SPOKEN_PITCH = 0.7;
+const SPOKEN_RATE = 0.95;
+// Deepest, most authoritative local male voice first — the fallback when no clip is recorded.
+const VOICE_PREFERENCE = [/david/i, /mark/i, /guy/i] as const;
+const CLIP_VOLUME = 0.9;
 
 const pickLocalVoice = (): SpeechSynthesisVoice | undefined => {
   const localEnglish = window.speechSynthesis
@@ -57,7 +78,7 @@ const pickLocalVoice = (): SpeechSynthesisVoice | undefined => {
   return preferred ?? localEnglish[0] ?? window.speechSynthesis.getVoices()[0];
 };
 
-/** Toasty-pop audio: synth boing + the Trump line (bundled clip if present, else low-pitch synth voice). */
+/** Toasty-pop audio: synth boing + the line (your recorded clip if present, else a low-pitch synth voice). */
 export const useToastySound = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const clipRef = useRef<HTMLAudioElement | null>(null);
@@ -100,11 +121,12 @@ export const useToastySound = () => {
       window.speechSynthesis.speak(utterance);
     };
 
-    if (VOICE_CLIP_URL) {
-      clipRef.current = clipRef.current ?? new Audio(VOICE_CLIP_URL);
-      clipRef.current.volume = CLIP_VOLUME;
-      clipRef.current.currentTime = 0;
-      clipRef.current.play().catch(speakLine);
+    const clip = VOICE_CLIPS.find((candidate) => candidate.caption === line);
+    if (clip) {
+      const audio = new Audio(clip.url);
+      audio.volume = CLIP_VOLUME;
+      clipRef.current = audio;
+      audio.play().catch(speakLine);
       return;
     }
     speakLine();
