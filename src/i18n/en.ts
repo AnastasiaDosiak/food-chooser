@@ -13,7 +13,7 @@ export const en: Dictionary = {
   'choice.restaurant.title': 'By restaurant',
   'choice.restaurant.desc': 'handpick the contenders, then lose control anyway.',
 
-  'venues.loading': '📡 rounding up nearby kitchens…',
+  'venues.loading': '📡 rounding up nearby kitchens… the first lookup can take a few seconds.',
   'venues.error': 'the data gods are busy. {error}',
   'venues.retry': 'try again',
   'venues.empty': 'no kitchens in range. widen the scope or pick another spot.',

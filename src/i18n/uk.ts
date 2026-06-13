@@ -13,7 +13,7 @@ export const uk: Dictionary = {
   'choice.restaurant.title': 'За закладом',
   'choice.restaurant.desc': 'обери претендентів — і все одно втрать контроль.',
 
-  'venues.loading': '📡 збираємо найближчі кухні…',
+  'venues.loading': '📡 збираємо найближчі кухні… перший пошук може зайняти кілька секунд.',
   'venues.error': 'боги даних зайняті. {error}',
   'venues.retry': 'спробувати ще',
   'venues.empty': 'поряд нічого. розшир зону або обери інше місце.',
