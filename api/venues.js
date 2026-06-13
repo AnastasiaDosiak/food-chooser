@@ -5,13 +5,12 @@
 
 export const config = { maxDuration: 60 };
 
+// Fail fast: the client has a curated fallback, so a quick miss beats a long wait.
 const OVERPASS_ENDPOINTS = [
-  // Fast when it's not rate-limiting; a couple of quick tries clear a transient 429.
-  { url: 'https://overpass-api.de/api/interpreter', timeoutMs: 7000, attempts: 2 },
-  // Slow but rarely rate-limits — the patient fallback, given a long leash.
-  { url: 'https://overpass.kumi.systems/api/interpreter', timeoutMs: 26000, attempts: 1 },
+  { url: 'https://overpass-api.de/api/interpreter', timeoutMs: 6000, attempts: 1 },
+  { url: 'https://overpass.kumi.systems/api/interpreter', timeoutMs: 7000, attempts: 1 },
 ];
-const RETRY_BACKOFF_MS = 1200;
+const RETRY_BACKOFF_MS = 1000;
 
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
