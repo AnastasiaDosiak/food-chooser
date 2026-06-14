@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { pickTrumpPhrase, useToastySound } from '@hooks/useToastySound';
+import { pickToastyLine, useToastySound } from '@hooks/useToastySound';
 
 import './TrumpToasty.scss';
 
@@ -27,7 +27,7 @@ type ToastyPhase = 'hidden' | 'jumping' | 'leaving' | 'done';
 /** MK "Toasty!"-style corner pop: the house congratulates you on the choice it made for you. */
 export const TrumpToasty = () => {
   const [phase, setPhase] = useState<ToastyPhase>('hidden');
-  const [line] = useState(pickTrumpPhrase);
+  const [line] = useState(pickToastyLine);
   const { playToasty } = useToastySound();
 
   useEffect(() => {
@@ -72,8 +72,22 @@ export const TrumpToasty = () => {
           />
           <circle cx="36" cy="134" r="12" fill={PALETTE.skin} />
           <circle cx="164" cy="134" r="12" fill={PALETTE.skin} />
-          <circle cx="41" cy="142" r="4.5" stroke={PALETTE.skinShade} strokeWidth="2.5" fill="none" />
-          <circle cx="159" cy="142" r="4.5" stroke={PALETTE.skinShade} strokeWidth="2.5" fill="none" />
+          <circle
+            cx="41"
+            cy="142"
+            r="4.5"
+            stroke={PALETTE.skinShade}
+            strokeWidth="2.5"
+            fill="none"
+          />
+          <circle
+            cx="159"
+            cy="142"
+            r="4.5"
+            stroke={PALETTE.skinShade}
+            strokeWidth="2.5"
+            fill="none"
+          />
         </g>
         <rect x="88" y="146" width="24" height="20" fill={PALETTE.skin} />
         <path

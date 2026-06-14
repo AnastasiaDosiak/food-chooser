@@ -11,12 +11,13 @@ import {
 import type { WheelSegmentOption } from '@shared-types/index';
 import {
   WEAK_FLICK_THRESHOLD_DEG_PER_MS,
+  buildSuspenseTimeline,
   computeSegmentArcs,
   computeTargetRotation,
   easeOutBack,
   easeOutDrama,
+  easeSurge,
   findSegmentIndexAtPointer,
-  flickDuration,
   flickRevolutions,
   pickWeightedWinnerIndex,
   randomBetween,
@@ -25,6 +26,7 @@ import {
   velocityFromSamples,
   type PointerSample,
   type SegmentArc,
+  type SpinPhase,
 } from '@utils/wheelMath';
 
 export type WheelPhase = 'idle' | 'dragging' | 'spinning' | 'rebounding';
@@ -39,6 +41,8 @@ interface UseWheelSpinParams {
   onFlick: () => void;
   onSpeedChange: (speedDegPerMs: number) => void;
   onWeakFlick: () => void;
+  /** Fired at each suspense hold so the UI can flash a teasing line. */
+  onSuspenseBeat: () => void;
   onSettle: (winner: WheelSegmentOption) => void;
 }
 
@@ -53,6 +57,7 @@ export const useWheelSpin = ({
   onFlick,
   onSpeedChange,
   onWeakFlick,
+  onSuspenseBeat,
   onSettle,
 }: UseWheelSpinParams) => {
   const [phase, setPhase] = useState<WheelPhase>('idle');
@@ -72,6 +77,7 @@ export const useWheelSpin = ({
     onFlick,
     onSpeedChange,
     onWeakFlick,
+    onSuspenseBeat,
     onSettle,
   });
   useEffect(() => {
@@ -81,9 +87,18 @@ export const useWheelSpin = ({
       onFlick,
       onSpeedChange,
       onWeakFlick,
+      onSuspenseBeat,
       onSettle,
     };
-  }, [onDragStart, onBoundaryCross, onFlick, onSpeedChange, onWeakFlick, onSettle]);
+  }, [
+    onDragStart,
+    onBoundaryCross,
+    onFlick,
+    onSpeedChange,
+    onWeakFlick,
+    onSuspenseBeat,
+    onSettle,
+  ]);
 
   const applyRotation = useCallback((rotation: number) => {
     rotationRef.current = rotation;
@@ -166,18 +181,46 @@ export const useWheelSpin = ({
     frameRef.current = requestAnimationFrame(step);
   }, [applyRotation]);
 
-  const runSpinAnimation = useCallback(
-    (winnerIndex: number, targetRotation: number, duration: number) => {
-      const fromRotation = rotationRef.current;
+  /** Plays a suspense timeline phase-by-phase: tween → optional hold → next, then settle. */
+  const runSpinTimeline = useCallback(
+    (winnerIndex: number, phases: SpinPhase[]) => {
+      let phaseIndex = 0;
+      let fromRotation = rotationRef.current;
       let startedAt: number | null = null;
+      let holdUntil: number | null = null;
       let previousRotation = fromRotation;
       let previousTimestamp: number | null = null;
 
+      const settle = () => {
+        setPhase('idle');
+        callbacksRef.current.onSpeedChange(0);
+        callbacksRef.current.onSettle(segments[winnerIndex]);
+      };
+
       const step = (timestamp: number) => {
+        if (holdUntil !== null) {
+          callbacksRef.current.onSpeedChange(0);
+          if (timestamp < holdUntil) {
+            frameRef.current = requestAnimationFrame(step);
+            return;
+          }
+          holdUntil = null;
+          startedAt = null;
+          fromRotation = rotationRef.current;
+          phaseIndex += 1;
+          if (phaseIndex >= phases.length) {
+            settle();
+            return;
+          }
+          frameRef.current = requestAnimationFrame(step);
+          return;
+        }
+
+        const phase = phases[phaseIndex];
         startedAt = startedAt ?? timestamp;
-        const progress = Math.min((timestamp - startedAt) / duration, 1);
-        const rotation =
-          fromRotation + (targetRotation - fromRotation) * easeOutDrama(progress);
+        const progress = Math.min((timestamp - startedAt) / phase.durationMs, 1);
+        const eased = phase.ease === 'surge' ? easeSurge(progress) : easeOutDrama(progress);
+        const rotation = fromRotation + (phase.toRotation - fromRotation) * eased;
         applyRotation(rotation);
         tickOnBoundaryCross(rotation);
 
@@ -191,12 +234,28 @@ export const useWheelSpin = ({
 
         if (progress < 1) {
           frameRef.current = requestAnimationFrame(step);
-        } else {
-          setPhase('idle');
-          callbacksRef.current.onSpeedChange(0);
-          callbacksRef.current.onSettle(segments[winnerIndex]);
+          return;
         }
+
+        if (phase.holdMsAfter > 0) {
+          if (phase.suspense) {
+            callbacksRef.current.onSuspenseBeat();
+          }
+          holdUntil = timestamp + phase.holdMsAfter;
+          frameRef.current = requestAnimationFrame(step);
+          return;
+        }
+
+        startedAt = null;
+        fromRotation = phase.toRotation;
+        phaseIndex += 1;
+        if (phaseIndex >= phases.length) {
+          settle();
+          return;
+        }
+        frameRef.current = requestAnimationFrame(step);
       };
+
       frameRef.current = requestAnimationFrame(step);
     },
     [segments, applyRotation, tickOnBoundaryCross],
@@ -206,20 +265,23 @@ export const useWheelSpin = ({
     (releaseSpeed: number) => {
       const direction = releaseSpeed > 0 ? 1 : (-1 as const);
       const winnerIndex = pickWeightedWinnerIndex(segments);
-      const targetRotation = computeTargetRotation(
+      const finalTarget = computeTargetRotation(
         arcsRef.current,
         winnerIndex,
         rotationRef.current,
         flickRevolutions(releaseSpeed),
         direction,
       );
-      runSpinAnimation(
+      runSpinTimeline(
         winnerIndex,
-        targetRotation,
-        flickDuration(targetRotation - rotationRef.current, releaseSpeed),
+        buildSuspenseTimeline({
+          fromRotation: rotationRef.current,
+          finalTarget,
+          launchSpeedDegPerMs: releaseSpeed,
+        }),
       );
     },
-    [segments, runSpinAnimation],
+    [segments, runSpinTimeline],
   );
 
   /** Casino-button path: the croupier throws clockwise — long, loud, rigged all the same. */
@@ -230,22 +292,28 @@ export const useWheelSpin = ({
     arcsRef.current = computeSegmentArcs(segments);
     lastSegmentIndexRef.current = findSegmentIndexAtPointer(arcsRef.current, rotationRef.current);
     const winnerIndex = pickWeightedWinnerIndex(segments);
-    const targetRotation = computeTargetRotation(
+    const finalTarget = computeTargetRotation(
       arcsRef.current,
       winnerIndex,
       rotationRef.current,
       randomIntBetween(CASINO_SPIN_REVOLUTIONS_MIN, CASINO_SPIN_REVOLUTIONS_MAX),
       1,
     );
+    // No release velocity from a button press — back into a launch speed from a casino-length spin.
+    const casinoDuration = randomBetween(CASINO_SPIN_DURATION_MS_MIN, CASINO_SPIN_DURATION_MS_MAX);
+    const launchSpeed = (4 * Math.abs(finalTarget - rotationRef.current)) / casinoDuration;
     setPhase('spinning');
     callbacksRef.current.onFlick();
-    runSpinAnimation(
+    runSpinTimeline(
       winnerIndex,
-      targetRotation,
-      randomBetween(CASINO_SPIN_DURATION_MS_MIN, CASINO_SPIN_DURATION_MS_MAX),
+      buildSuspenseTimeline({
+        fromRotation: rotationRef.current,
+        finalTarget,
+        launchSpeedDegPerMs: launchSpeed,
+      }),
     );
     return true;
-  }, [phase, segments, runSpinAnimation]);
+  }, [phase, segments, runSpinTimeline]);
 
   const handlePointerUp = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {

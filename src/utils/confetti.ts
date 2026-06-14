@@ -1,7 +1,7 @@
 import confetti from 'canvas-confetti';
 
 import { WHEEL_PALETTE } from '@common/constants';
-import { FOOD_TYPES } from '@common/foodTypes';
+import { CUISINE_CONFETTI_EMOJIS } from '@common/cuisineCatalog';
 
 const COLORS = [...WHEEL_PALETTE];
 const CANNONADE_SCHEDULE_MS = [0, 250, 520, 800, 1120];
@@ -12,8 +12,8 @@ let foodShapesCache: confetti.Shape[] | null = null;
 /** Rasterized once and reused — shapeFromText builds a bitmap per emoji. */
 const foodShapes = (): confetti.Shape[] => {
   if (!foodShapesCache) {
-    foodShapesCache = FOOD_TYPES.map((foodType) =>
-      confetti.shapeFromText({ text: foodType.emoji, scalar: FOOD_SCALAR }),
+    foodShapesCache = CUISINE_CONFETTI_EMOJIS.map((emoji) =>
+      confetti.shapeFromText({ text: emoji, scalar: FOOD_SCALAR }),
     );
   }
   return foodShapesCache;

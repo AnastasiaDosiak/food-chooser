@@ -16,6 +16,19 @@ export interface PointerSample {
 
 export type SpinDirection = 1 | -1;
 
+export type SpinEase = 'drama' | 'surge';
+
+export interface SpinPhase {
+  /** Absolute rotation (deg) the wheel reaches by the end of this phase's tween. */
+  toRotation: number;
+  durationMs: number;
+  ease: SpinEase;
+  /** Suspense pause (ms) held after the tween — 0 for none. */
+  holdMsAfter: number;
+  /** Whether to surface a funny commentary line during this phase's hold. */
+  suspense: boolean;
+}
+
 const FULL_TURN = 360;
 
 /** Fraction of a slice the near-miss landing may sit from its entry edge. */
@@ -29,6 +42,18 @@ const FLICK_REVOLUTIONS_MIN = 2;
 const FLICK_REVOLUTIONS_MAX = 8;
 const FLICK_DURATION_MS_MIN = 2200;
 const FLICK_DURATION_MS_MAX = 9000;
+
+/** Multi-burst drama: the spin breaks into 2–4 bursts that stop on random tiles and surge back up. */
+const SUSPENSE_BURSTS_MIN = 2;
+const SUSPENSE_BURSTS_MAX = 4;
+const SUSPENSE_FIRST_FRACTION_MIN = 0.45;
+const SUSPENSE_FIRST_FRACTION_MAX = 0.7;
+const SUSPENSE_BURST_WEIGHT_MIN = 0.5;
+const SUSPENSE_BURST_WEIGHT_MAX = 1.5;
+const SUSPENSE_HOLD_MS_MIN = 300;
+const SUSPENSE_HOLD_MS_MAX = 800;
+const SUSPENSE_SURGE_MS_MIN = 900;
+const SUSPENSE_SURGE_MS_MAX = 1900;
 
 export const computeSegmentArcs = (options: WheelSegmentOption[]): SegmentArc[] => {
   const totalWeight = options.reduce((sum, option) => sum + option.weight, 0);
@@ -174,4 +199,65 @@ export const easeOutBack = (progress: number): number => {
   const overshoot = 1.70158;
   const shifted = progress - 1;
   return 1 + (overshoot + 1) * shifted ** 3 + overshoot * shifted ** 2;
+};
+
+/** easeInOutCubic — the wheel surges back up to life from a dead stop, then eases down again. */
+export const easeSurge = (progress: number): number =>
+  progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
+
+export interface SuspenseTimelineParams {
+  fromRotation: number;
+  finalTarget: number;
+  launchSpeedDegPerMs: number;
+  random?: () => number;
+}
+
+/**
+ * Choreography to the *already-rigged* target: the spin breaks into 2–4 bursts.
+ * The first is velocity-matched and decelerates to a stop on a random tile; each
+ * later burst surges back up to speed and halts on another random tile. The final
+ * burst lands the winner — so where it pauses never reveals the outcome.
+ */
+export const buildSuspenseTimeline = ({
+  fromRotation,
+  finalTarget,
+  launchSpeedDegPerMs,
+  random = Math.random,
+}: SuspenseTimelineParams): SpinPhase[] => {
+  const totalDelta = finalTarget - fromRotation;
+  const burstCount = randomIntBetween(SUSPENSE_BURSTS_MIN, SUSPENSE_BURSTS_MAX, random);
+  const firstFraction = randomBetween(
+    SUSPENSE_FIRST_FRACTION_MIN,
+    SUSPENSE_FIRST_FRACTION_MAX,
+    random,
+  );
+
+  // Each later burst gets a random slice of the remaining journey, so its stop lands on an
+  // arbitrary tile — never a fixed gap from the winner.
+  const tailWeights = Array.from({ length: burstCount - 1 }, () =>
+    randomBetween(SUSPENSE_BURST_WEIGHT_MIN, SUSPENSE_BURST_WEIGHT_MAX, random),
+  );
+  const tailTotal = tailWeights.reduce((sum, weight) => sum + weight, 0) || 1;
+  const fractions = [firstFraction];
+  let cumulative = firstFraction;
+  for (const weight of tailWeights) {
+    cumulative += ((1 - firstFraction) * weight) / tailTotal;
+    fractions.push(cumulative);
+  }
+  fractions[fractions.length - 1] = 1; // land exactly on the rigged target
+
+  return fractions.map((fraction, index) => {
+    const isFirst = index === 0;
+    const isLast = index === fractions.length - 1;
+    const toRotation = fromRotation + totalDelta * fraction;
+    return {
+      toRotation,
+      durationMs: isFirst
+        ? flickDuration(toRotation - fromRotation, launchSpeedDegPerMs)
+        : randomBetween(SUSPENSE_SURGE_MS_MIN, SUSPENSE_SURGE_MS_MAX, random),
+      ease: isFirst ? 'drama' : 'surge',
+      holdMsAfter: isLast ? 0 : randomBetween(SUSPENSE_HOLD_MS_MIN, SUSPENSE_HOLD_MS_MAX, random),
+      suspense: !isLast,
+    };
+  });
 };

@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 
+import { pluralUk } from '@i18n/translate';
+import { useTranslation } from '@i18n/useTranslation';
 import { castVote, countTotalVotes, withdrawVote } from '@utils/voteTally';
 
 import './SelectionBoard.scss';
@@ -8,6 +10,8 @@ export interface SelectionItem {
   id: string;
   label: string;
   emoji?: string;
+  /** True for a user's My-Place addition — gets a ⭐ badge + highlight so they spot it. */
+  isUserAdded?: boolean;
 }
 
 export interface SelectionSection {
@@ -25,6 +29,8 @@ interface SelectionBoardProps {
   minSelections: number;
   finishLabel: string;
   onFinish: (votesByOptionId: Record<string, number>) => void;
+  /** When set, each section shows an inline "add a place" row (sectionId = cuisine-family id). */
+  onAddItem?: (sectionId: string, name: string) => void;
 }
 
 export const SelectionBoard = ({
@@ -34,8 +40,20 @@ export const SelectionBoard = ({
   minSelections,
   finishLabel,
   onFinish,
+  onAddItem,
 }: SelectionBoardProps) => {
+  const { t, language } = useTranslation();
   const [votesByOptionId, setVotesByOptionId] = useState<Record<string, number>>({});
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+
+  const handleAddItem = (sectionId: string) => {
+    const name = (drafts[sectionId] ?? '').trim();
+    if (!name) {
+      return;
+    }
+    onAddItem?.(sectionId, name);
+    setDrafts((previous) => ({ ...previous, [sectionId]: '' }));
+  };
 
   const handleIncrement = (optionId: string) => {
     setVotesByOptionId((previousVotes) => {
@@ -61,15 +79,29 @@ export const SelectionBoard = ({
 
   const canFinish = votedOptionCount >= minSelections;
 
+  const pluralNoun = (base: string, count: number) => {
+    const one = t(`selection.noun.${base}.one`);
+    const few = t(`selection.noun.${base}.few`);
+    const many = t(`selection.noun.${base}.many`);
+    return language === 'uk' ? pluralUk(count, one, few, many) : count === 1 ? one : few;
+  };
+
   const statusText =
     mode === 'select'
-      ? `${votedOptionCount} contender${votedOptionCount === 1 ? '' : 's'} picked`
-      : `${totalVotes} vote${totalVotes === 1 ? '' : 's'} cast · max ${partySize} per option`;
+      ? t('selection.status.picked', {
+          count: votedOptionCount,
+          noun: pluralNoun('contender', votedOptionCount),
+        })
+      : t('selection.status.cast', {
+          count: totalVotes,
+          noun: pluralNoun('vote', totalVotes),
+          max: partySize,
+        });
 
   const hintText =
     mode === 'select'
-      ? `pick at least ${minSelections} — destiny needs options`
-      : 'shout, argue, then click — democracy at its finest';
+      ? t('selection.hint.select', { min: minSelections })
+      : t('selection.hint.tally');
 
   return (
     <div className="selection-board">
@@ -89,7 +121,7 @@ export const SelectionBoard = ({
                 return (
                   <div
                     key={item.id}
-                    className={`selection-board__chip${isActive ? ' selection-board__chip--active' : ''}`}
+                    className={`selection-board__chip${isActive ? ' selection-board__chip--active' : ''}${item.isUserAdded ? ' selection-board__chip--mine' : ''}`}
                   >
                     <button
                       type="button"
@@ -97,8 +129,13 @@ export const SelectionBoard = ({
                       disabled={isOptionFull}
                       onClick={() => handleIncrement(item.id)}
                     >
-                      {item.emoji && <span className="selection-board__chip-emoji">{item.emoji}</span>}
+                      {item.emoji && (
+                        <span className="selection-board__chip-emoji">{item.emoji}</span>
+                      )}
                       <span className="selection-board__chip-label">{item.label}</span>
+                      {item.isUserAdded && (
+                        <span className="selection-board__chip-mine" aria-hidden="true">⭐</span>
+                      )}
                       {mode === 'tally' && isActive && (
                         <span className="selection-board__chip-count">{voteCount}</span>
                       )}
@@ -110,7 +147,7 @@ export const SelectionBoard = ({
                       <button
                         type="button"
                         className="selection-board__chip-minus"
-                        aria-label={`Remove a vote from ${item.label}`}
+                        aria-label={t('selection.removeVote', { label: item.label })}
                         onClick={() => handleDecrement(item.id)}
                       >
                         −
@@ -120,6 +157,32 @@ export const SelectionBoard = ({
                 );
               })}
             </div>
+            {onAddItem && (
+              <form
+                className="selection-board__add"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleAddItem(section.id);
+                }}
+              >
+                <input
+                  className="selection-board__add-input"
+                  type="text"
+                  value={drafts[section.id] ?? ''}
+                  placeholder={t('selection.add.placeholder')}
+                  onChange={(event) =>
+                    setDrafts((previous) => ({ ...previous, [section.id]: event.target.value }))
+                  }
+                />
+                <button
+                  type="submit"
+                  className="selection-board__add-button"
+                  aria-label={t('selection.add.submit')}
+                >
+                  ➕
+                </button>
+              </form>
+            )}
           </section>
         ))}
       </div>
